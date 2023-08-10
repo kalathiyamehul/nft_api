@@ -1,0 +1,63 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Deploy
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [horizon_master]
+  #pull_request:
+    #branches: [master]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.19.0]
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      # - uses: pnpm/action-setup@v2.0.1
+      #   with:
+      #     version: 6.32.2
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      #     cache: 'pnpm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Prepare Dist
+        run: cp  -r utils modules layers constants contracts dist/
+
+      - name: Copy Other Required Packeges Dist
+        run: cp Procfile package.json package-lock.json hardhat.config.js .npmrc dist/
+
+      - name: Generate deployment package
+        run: cd dist && zip -r deploy.zip . -x '*.git*' && cp deploy.zip ../
+
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v18
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: horizonProduction
+          environment_name: Horizonproduction-env
+          region: ap-south-1
+          version_label: ver-${{ github.sha }}
+          deployment_package: deploy.zip
