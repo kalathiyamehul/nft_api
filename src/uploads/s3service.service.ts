@@ -4,7 +4,6 @@ import slugify from 'slugify';
 import { FileUpload } from './uploads.controller';
 import axios from 'axios';
 const shortid = require('shortid');
-const sharp = require('sharp');
 const fs = require('fs').promises;
 export interface deleteDto {
   Key: string[];
@@ -18,8 +17,8 @@ export class S3Service {
     region: process.env.AWS_REGION,
   });
   s3NewTesting = new AWS.S3({
-    accessKeyId: "AKIA3EI25N25O7CAARPU",
-    secretAccessKey: "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",
+    accessKeyId: "AKIARAMH2SCJKAWBY32V",
+    secretAccessKey: "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",
     region: process.env.AWS_REGION,
   })
   async uploadFile(file) {
@@ -223,26 +222,26 @@ export class S3Service {
       body?.fileType,
     );
     let splittedfileNamePath = fileNamePath.split('/');
-    let fileName = splittedfileNamePath[splittedfileNamePath.length - 1];
-    const resizeOptions = {
-      fit: 'contain',
-      withoutEnlargement: true,
-    };
-    let compressedFile = sharp(file.buffer);
-    if (body?.fileType === 'page' || body?.fileType === 'user') {
-      compressedFile.resize(400, 400, resizeOptions); // 400*400
-    } else if (body?.fileType === 'auction' || body?.fileType === 'nft') {
-      compressedFile.resize(600, 600, resizeOptions); // 100*100
-    } else if (body?.fileType === 'story') {
-      compressedFile.resize(600, 800, resizeOptions); // 600*800
-    }
-    await compressedFile.toFile('/tmp/' + fileName);
-    let fileBuffer = await fs.readFile('/tmp/' + fileName);
-    fs.unlink('/tmp/' + fileName);
+    // let fileName = splittedfileNamePath[splittedfileNamePath.length - 1];
+    // const resizeOptions = {
+    //   fit: 'contain',
+    //   withoutEnlargement: true,
+    // };
+    // let compressedFile = sharp(file.buffer);
+    // if (body?.fileType === 'page' || body?.fileType === 'user') {
+    //   compressedFile.resize(400, 400, resizeOptions); // 400*400
+    // } else if (body?.fileType === 'auction' || body?.fileType === 'nft') {
+    //   compressedFile.resize(600, 600, resizeOptions); // 100*100
+    // } else if (body?.fileType === 'story') {
+    //   compressedFile.resize(600, 800, resizeOptions); // 600*800
+    // }
+    // await compressedFile.toFile('/tmp/' + fileName);
+    // let fileBuffer = await fs.readFile('/tmp/' + fileName);
+    // fs.unlink('/tmp/' + fileName);
     const params = {
       Bucket: body?.bucketname,
       Key: fileNamePath,
-      Body: fileBuffer,
+      Body: file?.buffer,
       ACL: 'public-read',
       ContentType: 'image/webp',
       CacheControl: 'max-age=172800',
